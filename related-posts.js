@@ -35,6 +35,11 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     const container = document.getElementById('related-posts');
     if (!container) return console.warn("⚠️ المنت #related-posts پیدا نشد.");
 
+    f (related.length <= 2) {
+      container.style.justifyContent = 'center';
+    } else {
+      container.style.justifyContent = 'flex-start';
+    }
     container.style.display = 'flex';
     container.style.flexWrap = 'wrap';
     container.style.gap = '15px';
