@@ -1,50 +1,45 @@
-// related-posts.js – نسخه نهایی با postId
-
+// 🔧 تنظیمات
 const MAX_RELATED = 5;
-const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=50';
+const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=100';
 
+// 🧠 تابع اصلی
 (async () => {
   try {
+    const metaPostId = document.querySelector('meta[name="postId"]')?.content;
+    console.log("meta postId:", metaPostId);
+    if (!metaPostId) return console.warn("⚠️ meta postId یافت نشد.");
+
+    // واکشی فید کل پست‌ها
     const res = await fetch(BLOG_URL);
     const data = await res.json();
-
     const posts = data.feed.entry;
-    if (!posts) return console.warn("⚠️ هیچ پستی یافت نشد.");
-    
-    // 🔹 پست جاری از meta
-    const currentId = document.querySelector('meta[name="postId"]')?.content;
-    if (!currentId) return console.warn("⚠️ meta postId پیدا نشد.");
+    if (!posts) return console.warn("⚠️ هیچ پستی در فید یافت نشد.");
 
-    console.log("meta postId:", currentId);
-    console.log("feed first entry id:", posts[0].id.$t);
-    
-    const currentPost = posts.find(p => p.id.$t.endsWith(`.post-${currentId}`));
-    if (!currentPost || !currentPost.category) return console.warn("⚠️ پست جاری برچسب ندارد.");
+    // پیدا کردن پست فعلی بر اساس postId
+    const currentPost = posts.find(p => p.id.$t.includes(metaPostId));
+    if (!currentPost) return console.warn("⚠️ پست جاری در فید پیدا نشد.");
 
-    const currentLabels = currentPost.category.map(c => c.term.trim());
+    const currentLabels = currentPost.category?.map(c => c.term.trim()) || [];
     console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
 
-    // 🔹 پیدا کردن پست‌های مرتبط
+    if (currentLabels.length === 0) return console.warn("⚠️ پست جاری برچسب ندارد.");
+
+    // فیلتر پست‌های مرتبط بر اساس برچسب‌های دقیق
     const related = posts.filter(p => {
+      if (p.id.$t.includes(metaPostId)) return false; // خود پست فعلی نباشه
       if (!p.category) return false;
+
       const labels = p.category.map(c => c.term.trim());
-      const hasCommon = labels.some(lbl => currentLabels.includes(lbl));
-      const link = p.link.find(l => l.rel === 'alternate')?.href;
-      return hasCommon && !link.includes(currentId);
+      return labels.some(lbl => currentLabels.includes(lbl));
     }).slice(0, MAX_RELATED);
 
     console.log(`✅ ${related.length} پست مرتبط پیدا شد`);
+
     if (related.length === 0) return;
 
-    // 🔹 نمایش کارت‌ها
+    // نمایش در صفحه
     const container = document.getElementById('related-posts');
-    if (!container) return console.warn("⚠️ المنت #related-posts پیدا نشد.");
-
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.gap = '15px';
-    container.style.marginTop = '15px';
-    if (related.length <= 2) container.style.justifyContent = 'center';
+    container.innerHTML = ""; // پاک کردن محتواهای قبلی
 
     related.forEach(post => {
       const title = post.title.$t;
@@ -53,45 +48,24 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
       const card = document.createElement('div');
       card.style.cssText = `
-        flex: 1 1 180px;
-        min-width: 220px;
-        padding: 12px;
-        background: rgba(255,255,255,0.07);
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+        flex: 1 1 calc(50% - 10px);
+        padding:10px 15px;
+        margin:5px;
+        background:rgba(255,255,255,0.07);
+        border-radius:8px;
+        transition:background 0.3s;
       `;
-      card.onmouseover = () => {
-        card.style.transform = "translateY(-5px)";
-        card.style.boxShadow = "0 6px 18px rgba(0,0,0,0.15)";
-        card.style.background = "rgba(255,255,255,0.12)";
-      };
-      card.onmouseout = () => {
-        card.style.transform = "translateY(0)";
-        card.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
-        card.style.background = "rgba(255,255,255,0.07)";
-      };
+      card.onmouseover = () => card.style.background = "rgba(255,255,255,0.15)";
+      card.onmouseout = () => card.style.background = "rgba(255,255,255,0.07)";
 
       card.innerHTML = `
         <a href="${link}" style="text-decoration:none;color:inherit;display:block;">
-          <strong style="display:block;margin-bottom:6px;">${title}</strong>
-          <p style="font-size:13px;color:#bbb;margin:0;">${summary}</p>
+          <strong>${title}</strong>
+          <p style="font-size:13px;color:#bbb;margin:4px 0 0;">${summary}</p>
         </a>
       `;
       container.appendChild(card);
     });
-
-    // ریسپانسیو
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @media (max-width:768px){
-        #related-posts div { flex: 1 1 calc(50% - 10px); }
-      }
-      @media (max-width:480px){
-        #related-posts div { flex: 1 1 100%; }
-      }
-    `;
-    document.head.appendChild(style);
 
   } catch (err) {
     console.error("❌ خطا در واکشی پست‌ها:", err);
