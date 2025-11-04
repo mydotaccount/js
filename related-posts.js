@@ -104,7 +104,3 @@ if (document.readyState === "loading") {
 } else {
   initRelatedPosts();
 }
-
-
-
-
