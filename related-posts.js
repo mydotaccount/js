@@ -9,27 +9,35 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     console.log("meta postId:", metaPostId);
     if (!metaPostId) return console.warn("⚠️ meta postId یافت نشد.");
 
-    // واکشی فید کل پست‌ها
+    // واکشی فید
     const res = await fetch(BLOG_URL);
     const data = await res.json();
     const posts = data.feed.entry;
     if (!posts) return console.warn("⚠️ هیچ پستی در فید یافت نشد.");
 
-    // پیدا کردن پست فعلی بر اساس postId
+    // پیدا کردن پست فعلی بر اساس ID
     const currentPost = posts.find(p => p.id.$t.includes(metaPostId));
     if (!currentPost) return console.warn("⚠️ پست جاری در فید پیدا نشد.");
 
-    const currentLabels = currentPost.category?.map(c => c.term.trim()) || [];
+    // استخراج برچسب‌ها از category یا مسیرهای جایگزین
+    let currentLabels = [];
+    if (currentPost.category) {
+      currentLabels = currentPost.category.map(c => c.term.trim());
+    } else if (currentPost["category$term"]) {
+      currentLabels = [currentPost["category$term"]];
+    } else if (currentPost.title?.$t?.includes("#")) {
+      // حالت خاص: اگر در عنوان هشتگ هست، مثلاً "پست من #اخلاق #دین"
+      currentLabels = currentPost.title.$t.match(/#([\p{L}\d_-]+)/gu)?.map(t => t.replace("#", "")) || [];
+    }
+
     console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
 
     if (currentLabels.length === 0) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
-    // فیلتر پست‌های مرتبط بر اساس برچسب‌های دقیق
+    // پست‌های مرتبط
     const related = posts.filter(p => {
-      if (p.id.$t.includes(metaPostId)) return false; // خود پست فعلی نباشه
-      if (!p.category) return false;
-
-      const labels = p.category.map(c => c.term.trim());
+      if (p.id.$t.includes(metaPostId)) return false;
+      const labels = p.category?.map(c => c.term.trim()) || [];
       return labels.some(lbl => currentLabels.includes(lbl));
     }).slice(0, MAX_RELATED);
 
@@ -37,9 +45,9 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
     if (related.length === 0) return;
 
-    // نمایش در صفحه
+    // نمایش
     const container = document.getElementById('related-posts');
-    container.innerHTML = ""; // پاک کردن محتواهای قبلی
+    container.innerHTML = "";
 
     related.forEach(post => {
       const title = post.title.$t;
@@ -71,3 +79,4 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     console.error("❌ خطا در واکشی پست‌ها:", err);
   }
 })();
+
