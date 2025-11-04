@@ -34,7 +34,7 @@ function initRelatedPosts() {
 
       const dark = isDarkMode();
       const textColor = dark ? "#eaeaea" : "#222";
-      const subColor = dark ? "#aaa" : "#555";
+      const subColor = dark ? "#999" : "#555";
       const borderColor = dark ? "#444" : "#ddd";
 
       const container = document.getElementById('related-posts');
@@ -56,16 +56,12 @@ function initRelatedPosts() {
       related.forEach(post => {
         const title = post.title.$t;
         const link = post.link.find(l => l.rel === 'alternate')?.href;
-        const labels = post.category?.map(c => c.term.trim()) || [];
-
-        // 🔍 پیدا کردن برچسب مشترک
-        const commonLabels = labels.filter(lbl => currentLabels.includes(lbl));
-        const labelHint = commonLabels.length > 0 ? commonLabels[Math.floor(Math.random() * commonLabels.length)] : null;
+        const summary = post.summary ? post.summary.$t.substring(0, 80) + '...' : '';
 
         const li = document.createElement('li');
         li.style.cssText = `
-          margin-bottom:12px;
-          line-height:1.7;
+          margin-bottom:10px;
+          line-height:1.6;
           border-bottom:1px dashed ${borderColor};
           padding-bottom:6px;
         `;
@@ -77,13 +73,9 @@ function initRelatedPosts() {
             text-decoration:none;
             transition:color 0.3s;
           ">${title}</a>
-          ${
-            labelHint
-              ? `<div style="font-size:13px;color:${subColor};margin-top:4px;">
-                  بر اساس برچسب: <span style="font-style:italic;">${labelHint}</span>
-                </div>`
-              : ""
-          }
+          <div style="font-size:13px;color:${subColor};margin-top:3px;">
+            ${summary}
+          </div>
         `;
 
         li.querySelector('a').onmouseover = () => li.querySelector('a').style.color = dark ? '#fff' : '#000';
@@ -104,3 +96,4 @@ if (document.readyState === "loading") {
 } else {
   initRelatedPosts();
 }
+
