@@ -1,4 +1,4 @@
-// related-posts.js – نسخه شیک و مدرن
+// related-posts.js – نسخه نهایی شیک و ریسپانسیو
 
 const MAX_RELATED = 5;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=50';
@@ -28,16 +28,23 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     }).slice(0, MAX_RELATED);
 
     console.log(`✅ ${related.length} پست مرتبط پیدا شد`);
-
     if (related.length === 0) return;
 
+    // کانتینر اصلی
     const container = document.getElementById('related-posts');
     if (!container) return console.warn("⚠️ المنت #related-posts پیدا نشد.");
-    
+
     container.style.display = 'flex';
     container.style.flexWrap = 'wrap';
     container.style.gap = '15px';
     container.style.marginTop = '15px';
+
+    // وسط چین کردن اگر تعداد کارت‌ها کم باشد
+    if (related.length <= 2) {
+      container.style.justifyContent = 'center';
+    } else {
+      container.style.justifyContent = 'flex-start';
+    }
 
     related.forEach(post => {
       const title = post.title.$t;
@@ -47,6 +54,7 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
       const card = document.createElement('div');
       card.style.cssText = `
         flex: 1 1 180px;
+        min-width: 220px; /* حداقل عرض */
         padding: 12px;
         background: rgba(255,255,255,0.07);
         border-radius: 10px;
