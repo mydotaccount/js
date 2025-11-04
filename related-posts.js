@@ -1,5 +1,5 @@
 // 🔧 تنظیمات
-const MAX_RELATED = 5;
+const MAX_RELATED = 4;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=100';
 
 // 🌗 تشخیص حالت تیره یا روشن
