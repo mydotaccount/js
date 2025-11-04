@@ -31,7 +31,6 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
     if (related.length === 0) return;
 
-    // کانتینر اصلی
     const container = document.getElementById('related-posts');
     if (!container) return console.warn("⚠️ المنت #related-posts پیدا نشد.");
 
@@ -40,6 +39,7 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     } else {
       container.style.justifyContent = 'flex-start';
     }
+    
     container.style.display = 'flex';
     container.style.flexWrap = 'wrap';
     container.style.gap = '15px';
