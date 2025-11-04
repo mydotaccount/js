@@ -2,11 +2,15 @@
 const MAX_RELATED = 5;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=100';
 
+// 🌗 تابع تشخیص حالت تیره/روشن
+function isDarkMode() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 function initRelatedPosts() {
   (async () => {
     try {
       const metaPostId = document.querySelector('meta[name="postId"]')?.content;
-      console.log("meta postId:", metaPostId);
       if (!metaPostId) return console.warn("⚠️ meta postId یافت نشد.");
 
       const res = await fetch(BLOG_URL);
@@ -22,7 +26,6 @@ function initRelatedPosts() {
         currentLabels = currentPost.category.map(c => c.term.trim());
       }
 
-      console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
       if (currentLabels.length === 0) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
       const related = posts.filter(p => {
@@ -31,9 +34,14 @@ function initRelatedPosts() {
         return labels.some(lbl => currentLabels.includes(lbl));
       }).slice(0, MAX_RELATED);
 
-      console.log(`✅ ${related.length} پست مرتبط پیدا شد`);
-
       if (related.length === 0) return;
+
+      const dark = isDarkMode();
+      const textColor = dark ? "#f5f5f5" : "#222";
+      const subText = dark ? "#bbb" : "#555";
+      const cardBg = dark ? "rgba(255,255,255,0.05)" : "#f8f9fa";
+      const cardHover = dark ? "rgba(255,255,255,0.1)" : "#f1f3f5";
+      const borderColor = dark ? "rgba(255,255,255,0.1)" : "#e5e5e5";
 
       const container = document.getElementById('related-posts');
       if (!container) return console.warn("⚠️ عنصر related-posts یافت نشد.");
@@ -42,9 +50,9 @@ function initRelatedPosts() {
         <h3 style="
           font-size: 1.2rem;
           font-weight: bold;
-          color: #222;
+          color: ${textColor};
           margin: 0 0 15px 0;
-          border-bottom: 1px solid rgba(0,0,0,0.1);
+          border-bottom: 1px solid ${borderColor};
           padding-bottom: 6px;
           display: inline-block;
         ">📚 مطالب مرتبط</h3>
@@ -66,20 +74,20 @@ function initRelatedPosts() {
         const card = document.createElement('div');
         card.style.cssText = `
           flex: 1 1 calc(50% - 10px);
-          background: #f8f9fa;
+          background: ${cardBg};
           border-radius: 10px;
           padding: 12px 15px;
           transition: all 0.3s ease;
           min-width: 220px;
-          border: 1px solid #e5e5e5;
+          border: 1px solid ${borderColor};
         `;
-        card.onmouseover = () => card.style.background = "#f1f3f5";
-        card.onmouseout = () => card.style.background = "#f8f9fa";
+        card.onmouseover = () => card.style.background = cardHover;
+        card.onmouseout = () => card.style.background = cardBg;
 
         card.innerHTML = `
-          <a href="${link}" style="text-decoration:none;color:inherit;display:block;">
-            <strong style="display:block;font-size:0.95rem;margin-bottom:6px;color:#222;">${title}</strong>
-            <p style="font-size:13px;color:#555;margin:0;">${summary}</p>
+          <a href="${link}" style="text-decoration:none;color:${textColor};display:block;">
+            <strong style="display:block;font-size:0.95rem;margin-bottom:6px;">${title}</strong>
+            <p style="font-size:13px;color:${subText};margin:0;">${summary}</p>
           </a>
         `;
         wrapper.appendChild(card);
@@ -109,3 +117,4 @@ if (document.readyState === "loading") {
     }
   }, 200);
 }
+
