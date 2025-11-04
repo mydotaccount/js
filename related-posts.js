@@ -53,6 +53,7 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
       const card = document.createElement('div');
       card.style.cssText = `
         flex: 1 1 180px;
+        min-width: 220px;  /* اضافه شد */
         padding: 12px;
         background: rgba(255,255,255,0.07);
         border-radius: 10px;
