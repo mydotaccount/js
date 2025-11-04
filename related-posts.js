@@ -1,4 +1,4 @@
-// related-posts.js – نسخه نهایی با شناسایی درست پست جاری
+// related-posts.js – نسخه نهایی با postId
 
 const MAX_RELATED = 5;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=50';
@@ -11,33 +11,29 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     const posts = data.feed.entry;
     if (!posts) return console.warn("⚠️ هیچ پستی یافت نشد.");
 
-    const currentTitle = document.querySelector('h1.post-title, h3.post-title')?.innerText.trim() || '';
-    const currentUrl = window.location.href;
+    // 🔹 پست جاری از meta
+    const currentId = document.querySelector('meta[name="postId"]')?.content;
+    if (!currentId) return console.warn("⚠️ meta postId پیدا نشد.");
 
-    // 🔹 پیدا کردن پست جاری با مقایسه دقیق URL
-    const currentPost = posts.find(p => {
-      const link = p.link.find(l => l.rel === 'alternate')?.href;
-      return link === currentUrl || currentUrl.startsWith(link);
-    });
-
+    const currentPost = posts.find(p => p.id.$t.endsWith(`.post-${currentId}`));
     if (!currentPost || !currentPost.category) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
     const currentLabels = currentPost.category.map(c => c.term.trim());
     console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
 
-    // 🔹 پیدا کردن پست‌های مرتبط (تطابق دقیق برچسب‌ها)
+    // 🔹 پیدا کردن پست‌های مرتبط
     const related = posts.filter(p => {
       if (!p.category) return false;
       const labels = p.category.map(c => c.term.trim());
       const hasCommon = labels.some(lbl => currentLabels.includes(lbl));
       const link = p.link.find(l => l.rel === 'alternate')?.href;
-      return hasCommon && link !== currentUrl;
+      return hasCommon && !link.includes(currentId);
     }).slice(0, MAX_RELATED);
 
     console.log(`✅ ${related.length} پست مرتبط پیدا شد`);
     if (related.length === 0) return;
 
-    // کانتینر اصلی
+    // 🔹 نمایش کارت‌ها
     const container = document.getElementById('related-posts');
     if (!container) return console.warn("⚠️ المنت #related-posts پیدا نشد.");
 
@@ -45,13 +41,7 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     container.style.flexWrap = 'wrap';
     container.style.gap = '15px';
     container.style.marginTop = '15px';
-
-    // وسط چین کردن اگر تعداد کارت‌ها کم باشد
-    if (related.length <= 2) {
-      container.style.justifyContent = 'center';
-    } else {
-      container.style.justifyContent = 'flex-start';
-    }
+    if (related.length <= 2) container.style.justifyContent = 'center';
 
     related.forEach(post => {
       const title = post.title.$t;
@@ -85,7 +75,6 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
           <p style="font-size:13px;color:#bbb;margin:0;">${summary}</p>
         </a>
       `;
-
       container.appendChild(card);
     });
 
