@@ -2,7 +2,7 @@
 const MAX_RELATED = 5;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=100';
 
-// 🌗 تابع تشخیص حالت تیره/روشن
+// 🌗 تشخیص حالت تیره یا روشن
 function isDarkMode() {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
@@ -11,22 +11,18 @@ function initRelatedPosts() {
   (async () => {
     try {
       const metaPostId = document.querySelector('meta[name="postId"]')?.content;
-      if (!metaPostId) return console.warn("⚠️ meta postId یافت نشد.");
+      if (!metaPostId) return;
 
       const res = await fetch(BLOG_URL);
       const data = await res.json();
       const posts = data.feed.entry;
-      if (!posts) return console.warn("⚠️ هیچ پستی در فید یافت نشد.");
+      if (!posts) return;
 
       const currentPost = posts.find(p => p.id.$t.includes(metaPostId));
-      if (!currentPost) return console.warn("⚠️ پست جاری در فید پیدا نشد.");
+      if (!currentPost) return;
 
-      let currentLabels = [];
-      if (currentPost.category) {
-        currentLabels = currentPost.category.map(c => c.term.trim());
-      }
-
-      if (currentLabels.length === 0) return console.warn("⚠️ پست جاری برچسب ندارد.");
+      const currentLabels = currentPost.category?.map(c => c.term.trim()) || [];
+      if (currentLabels.length === 0) return;
 
       const related = posts.filter(p => {
         if (p.id.$t.includes(metaPostId)) return false;
@@ -37,60 +33,55 @@ function initRelatedPosts() {
       if (related.length === 0) return;
 
       const dark = isDarkMode();
-      const textColor = dark ? "#f5f5f5" : "#222";
-      const subText = dark ? "#bbb" : "#555";
-      const cardBg = dark ? "rgba(255,255,255,0.05)" : "#f8f9fa";
-      const cardHover = dark ? "rgba(255,255,255,0.1)" : "#f1f3f5";
-      const borderColor = dark ? "rgba(255,255,255,0.1)" : "#e5e5e5";
+      const textColor = dark ? "#eaeaea" : "#222";
+      const subColor = dark ? "#999" : "#555";
+      const borderColor = dark ? "#444" : "#ddd";
 
       const container = document.getElementById('related-posts');
-      if (!container) return console.warn("⚠️ عنصر related-posts یافت نشد.");
-
       container.innerHTML = `
-        <h3 style="
-          font-size: 1.2rem;
-          font-weight: bold;
-          color: ${textColor};
-          margin: 0 0 15px 0;
-          border-bottom: 1px solid ${borderColor};
-          padding-bottom: 6px;
-          display: inline-block;
-        ">📚 مطالب مرتبط</h3>
-        <div id="related-wrapper" style="
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-top: 10px;
-        "></div>
+        <div style="margin-top:40px;border-top:1px solid ${borderColor};padding-top:15px;">
+          <h3 style="
+            font-size:1.1rem;
+            font-weight:600;
+            color:${textColor};
+            margin-bottom:10px;
+            letter-spacing:0.2px;
+          ">مطالب مرتبط</h3>
+          <ul id="related-list" style="list-style:none;padding:0;margin:0;"></ul>
+        </div>
       `;
 
-      const wrapper = container.querySelector("#related-wrapper");
+      const list = container.querySelector('#related-list');
 
       related.forEach(post => {
         const title = post.title.$t;
         const link = post.link.find(l => l.rel === 'alternate')?.href;
         const summary = post.summary ? post.summary.$t.substring(0, 80) + '...' : '';
 
-        const card = document.createElement('div');
-        card.style.cssText = `
-          flex: 1 1 calc(50% - 10px);
-          background: ${cardBg};
-          border-radius: 10px;
-          padding: 12px 15px;
-          transition: all 0.3s ease;
-          min-width: 220px;
-          border: 1px solid ${borderColor};
+        const li = document.createElement('li');
+        li.style.cssText = `
+          margin-bottom:10px;
+          line-height:1.6;
+          border-bottom:1px dashed ${borderColor};
+          padding-bottom:6px;
         `;
-        card.onmouseover = () => card.style.background = cardHover;
-        card.onmouseout = () => card.style.background = cardBg;
 
-        card.innerHTML = `
-          <a href="${link}" style="text-decoration:none;color:${textColor};display:block;">
-            <strong style="display:block;font-size:0.95rem;margin-bottom:6px;">${title}</strong>
-            <p style="font-size:13px;color:${subText};margin:0;">${summary}</p>
-          </a>
+        li.innerHTML = `
+          <a href="${link}" style="
+            color:${textColor};
+            font-weight:500;
+            text-decoration:none;
+            transition:color 0.3s;
+          ">${title}</a>
+          <div style="font-size:13px;color:${subColor};margin-top:3px;">
+            ${summary}
+          </div>
         `;
-        wrapper.appendChild(card);
+
+        li.querySelector('a').onmouseover = () => li.querySelector('a').style.color = dark ? '#fff' : '#000';
+        li.querySelector('a').onmouseout = () => li.querySelector('a').style.color = textColor;
+
+        list.appendChild(li);
       });
 
     } catch (err) {
@@ -99,22 +90,11 @@ function initRelatedPosts() {
   })();
 }
 
-// 🕒 اجرای ایمن پس از لود DOM
+// 📄 اجرا
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    const check = setInterval(() => {
-      if (document.getElementById("related-posts")) {
-        clearInterval(check);
-        initRelatedPosts();
-      }
-    }, 200);
-  });
+  document.addEventListener("DOMContentLoaded", initRelatedPosts);
 } else {
-  const check = setInterval(() => {
-    if (document.getElementById("related-posts")) {
-      clearInterval(check);
-      initRelatedPosts();
-    }
-  }, 200);
+  initRelatedPosts();
 }
+
 
