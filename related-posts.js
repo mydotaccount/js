@@ -10,11 +10,14 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
     const posts = data.feed.entry;
     if (!posts) return console.warn("⚠️ هیچ پستی یافت نشد.");
-
+    
     // 🔹 پست جاری از meta
     const currentId = document.querySelector('meta[name="postId"]')?.content;
     if (!currentId) return console.warn("⚠️ meta postId پیدا نشد.");
 
+    console.log("meta postId:", currentId);
+    console.log("feed first entry id:", posts[0].id.$t);
+    
     const currentPost = posts.find(p => p.id.$t.endsWith(`.post-${currentId}`));
     if (!currentPost || !currentPost.category) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
