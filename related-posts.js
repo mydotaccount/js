@@ -1,3 +1,4 @@
+// related-posts.js
 
 // 🔧 تنظیمات
 const MAX_RELATED = 5;
@@ -19,10 +20,9 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     if (!currentPost || !currentPost.category) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
     const currentLabels = currentPost.category.map(c => c.term.trim());
-
     console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
 
-    // 🔹 پیدا کردن پست‌های مرتبط (بر اساس تطابق دقیق یکی از برچسب‌ها)
+    // 🔹 پیدا کردن پست‌های مرتبط (بر اساس تطابق دقیق برچسب)
     const related = posts.filter(p => {
       if (!p.category) return false;
       const labels = p.category.map(c => c.term.trim());
@@ -37,6 +37,8 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
     // 🔹 نمایش در صفحه
     const container = document.getElementById('related-posts');
+    if (!container) return console.warn("⚠️ المنت #related-posts پیدا نشد.");
+
     related.forEach(post => {
       const title = post.title.$t;
       const link = post.link.find(l => l.rel === 'alternate')?.href;
