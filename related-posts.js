@@ -1,18 +1,28 @@
 <script>
 (async function() {
   const MAX_RELATED = 4;
-  const DEFAULT_IMAGE = ''; // حذف شد، فقط برای سازگاری نگه داشتیم
   const currentTitle = document.querySelector('h1.post-title, h3.post-title')?.innerText?.trim() || '';
-  const currentLabels = Array.from(document.querySelectorAll('.post-labels a, a[rel="tag"]')).map(a => a.innerText.trim()).filter(Boolean);
+  const currentLabels = Array.from(document.querySelectorAll('.post-labels a, a[rel="tag"]'))
+    .map(a => a.innerText.trim())
+    .filter(Boolean);
   const currentUrl = document.querySelector('link[rel="canonical"]')?.href || window.location.href;
 
   // اگر برچسب ندارد، هیچی نمایش نده
   if (!currentLabels.length) return;
 
+  // نرمال‌سازی رشته‌ها برای تطابق دقیق ولی مطمئن
+  const normalize = str => str
+    .trim()
+    .toLowerCase()
+    .replace(/[يی]/g, "ی")
+    .replace(/[كک]/g, "ک");
+
+  const normalizedLabels = currentLabels.map(normalize);
+
   const allPosts = [];
-  
-  // از همه برچسب‌ها واکشی انجام بده
-  for (let lbl of currentLabels) {
+
+  // واکشی پست‌های هر برچسب
+  for (let lbl of normalizedLabels) {
     try {
       const feedUrl = `${window.location.origin}/feeds/posts/default/-/${encodeURIComponent(lbl)}?alt=json&max-results=30`;
       const res = await fetch(feedUrl);
@@ -25,7 +35,7 @@
     }
   }
 
-  // حذف تکراری‌ها بر اساس لینک
+  // حذف تکراری‌ها
   const unique = [];
   const linksSeen = new Set();
 
@@ -37,17 +47,17 @@
     const title = e.title?.$t || '';
     if (title === currentTitle) continue;
 
-    const labels = e.category ? e.category.map(cat => cat.term.trim()) : [];
-    const hasExactMatch = labels.some(lbl => currentLabels.includes(lbl));
+    const labels = e.category ? e.category.map(cat => normalize(cat.term)) : [];
+    const hasExactMatch = labels.some(lbl => normalizedLabels.includes(lbl));
     if (!hasExactMatch) continue;
 
-    const summary = e.summary ? e.summary.$t.replace(/<[^>]+>/g, '').substring(0, 80) + '...' : '';
+    const summary = e.summary ? e.summary.$t.replace(/<[^>]+>/g, '').substring(0, 90) + '...' : '';
     unique.push({ title, link, summary });
   }
 
   if (!unique.length) return;
 
-  // ساخت بلوک فقط در صورت وجود نتیجه
+  // ساخت بخش مطالب مرتبط
   const wrap = document.createElement('div');
   wrap.id = 'related-posts-container';
   wrap.innerHTML = `
@@ -58,7 +68,6 @@
 
   const container = wrap.querySelector('#related-posts');
 
-  // انتخاب تصادفی تا ۴ پست
   const shuffled = unique.sort(() => 0.5 - Math.random()).slice(0, MAX_RELATED);
 
   shuffled.forEach(post => {
@@ -66,8 +75,8 @@
     card.style.cssText = `
       width:220px;border-radius:12px;overflow:hidden;
       background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);
-      box-shadow:0 4px 15px rgba(0,0,0,0.1);padding:10px;
-      transition:transform .3s;
+      box-shadow:0 4px 15px rgba(0,0,0,0.1);
+      padding:10px;transition:transform .3s;
     `;
     card.onmouseover = () => card.style.transform = 'translateY(-4px)';
     card.onmouseout = () => card.style.transform = 'translateY(0)';
