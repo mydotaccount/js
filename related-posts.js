@@ -1,4 +1,4 @@
-<script>
+
 // 🔧 تنظیمات
 const MAX_RELATED = 5;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=50';
@@ -66,4 +66,3 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     console.error("❌ خطا در واکشی پست‌ها:", err);
   }
 })();
-</script>
