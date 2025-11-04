@@ -15,7 +15,7 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     const posts = data.feed.entry;
     if (!posts) return console.warn("⚠️ هیچ پستی در فید یافت نشد.");
 
-    // پیدا کردن پست فعلی بر اساس ID
+    // پیدا کردن پست فعلی
     const currentPost = posts.find(p => p.id.$t.includes(metaPostId));
     if (!currentPost) return console.warn("⚠️ پست جاری در فید پیدا نشد.");
 
@@ -26,12 +26,10 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
     } else if (currentPost["category$term"]) {
       currentLabels = [currentPost["category$term"]];
     } else if (currentPost.title?.$t?.includes("#")) {
-      // حالت خاص: اگر در عنوان هشتگ هست، مثلاً "پست من #اخلاق #دین"
       currentLabels = currentPost.title.$t.match(/#([\p{L}\d_-]+)/gu)?.map(t => t.replace("#", "")) || [];
     }
 
     console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
-
     if (currentLabels.length === 0) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
     // پست‌های مرتبط
@@ -45,9 +43,27 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
     if (related.length === 0) return;
 
-    // نمایش
+    // 📦 نمایش بخش مطالب مرتبط
     const container = document.getElementById('related-posts');
-    container.innerHTML = "";
+    container.innerHTML = `
+      <h3 style="
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fff;
+        margin: 0 0 15px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        padding-bottom: 6px;
+        display: inline-block;
+      ">📚 مطالب مرتبط</h3>
+      <div id="related-wrapper" style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      "></div>
+    `;
+
+    const wrapper = container.querySelector("#related-wrapper");
 
     related.forEach(post => {
       const title = post.title.$t;
@@ -57,26 +73,25 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
       const card = document.createElement('div');
       card.style.cssText = `
         flex: 1 1 calc(50% - 10px);
-        padding:10px 15px;
-        margin:5px;
-        background:rgba(255,255,255,0.07);
-        border-radius:8px;
-        transition:background 0.3s;
+        background: rgba(255,255,255,0.07);
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+        min-width: 220px;
       `;
       card.onmouseover = () => card.style.background = "rgba(255,255,255,0.15)";
       card.onmouseout = () => card.style.background = "rgba(255,255,255,0.07)";
 
       card.innerHTML = `
         <a href="${link}" style="text-decoration:none;color:inherit;display:block;">
-          <strong>${title}</strong>
-          <p style="font-size:13px;color:#bbb;margin:4px 0 0;">${summary}</p>
+          <strong style="display:block;font-size:0.95rem;margin-bottom:6px;color:#fff;">${title}</strong>
+          <p style="font-size:13px;color:#bbb;margin:0;">${summary}</p>
         </a>
       `;
-      container.appendChild(card);
+      wrapper.appendChild(card);
     });
 
   } catch (err) {
     console.error("❌ خطا در واکشی پست‌ها:", err);
   }
 })();
-
