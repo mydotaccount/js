@@ -1,4 +1,4 @@
-// related-posts.js – نسخه نهایی شیک و ریسپانسیو
+// related-posts.js – نسخه نهایی با شناسایی درست پست جاری
 
 const MAX_RELATED = 5;
 const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-results=50';
@@ -13,12 +13,19 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
 
     const currentTitle = document.querySelector('h1.post-title, h3.post-title')?.innerText.trim() || '';
     const currentUrl = window.location.href;
-    const currentPost = posts.find(p => currentUrl.includes(p.link.find(l => l.rel === 'alternate')?.href.split('/').pop()));
+
+    // 🔹 پیدا کردن پست جاری با مقایسه دقیق URL
+    const currentPost = posts.find(p => {
+      const link = p.link.find(l => l.rel === 'alternate')?.href;
+      return link === currentUrl || currentUrl.startsWith(link);
+    });
+
     if (!currentPost || !currentPost.category) return console.warn("⚠️ پست جاری برچسب ندارد.");
 
     const currentLabels = currentPost.category.map(c => c.term.trim());
     console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
 
+    // 🔹 پیدا کردن پست‌های مرتبط (تطابق دقیق برچسب‌ها)
     const related = posts.filter(p => {
       if (!p.category) return false;
       const labels = p.category.map(c => c.term.trim());
@@ -54,7 +61,7 @@ const BLOG_URL = window.location.origin + '/feeds/posts/default?alt=json&max-res
       const card = document.createElement('div');
       card.style.cssText = `
         flex: 1 1 180px;
-        min-width: 220px; /* حداقل عرض */
+        min-width: 220px;
         padding: 12px;
         background: rgba(255,255,255,0.07);
         border-radius: 10px;
