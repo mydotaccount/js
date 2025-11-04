@@ -9,11 +9,19 @@ fetch(BLOG_URL)
   .then(data => {
     const posts = data.feed.entry;
     if (!posts) return;
+
     const currentTitle = document.querySelector('h1.post-title, h3.post-title')?.innerText || '';
+    const currentLabels = Array.from(document.querySelectorAll('.post-labels a')).map(a => a.innerText);
+
+    if (!currentLabels.length) return; // اگر پست برچسب ندارد، هیچ چیزی نشان داده نمی‌شود
 
     let related = posts.filter(post => {
-      const title = post.title.$t;
-      return title !== currentTitle && title.includes(currentTitle.split(' ')[0]);
+      if (post.title.$t === currentTitle) return false; // خود پست را حذف کن
+      if (!post.category) return false; // پست برچسب ندارد
+
+      const postLabels = post.category.map(c => c.term);
+      // حداقل یک برچسب مشترک
+      return postLabels.some(label => currentLabels.includes(label));
     }).slice(0, MAX_RELATED);
 
     const container = document.getElementById('related-posts');
