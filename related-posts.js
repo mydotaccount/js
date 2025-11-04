@@ -20,10 +20,6 @@ function initRelatedPosts() {
       let currentLabels = [];
       if (currentPost.category) {
         currentLabels = currentPost.category.map(c => c.term.trim());
-      } else if (currentPost["category$term"]) {
-        currentLabels = [currentPost["category$term"]];
-      } else if (currentPost.title?.$t?.includes("#")) {
-        currentLabels = currentPost.title.$t.match(/#([\p{L}\d_-]+)/gu)?.map(t => t.replace("#", "")) || [];
       }
 
       console.log("🏷️ برچسب‌های پست فعلی:", currentLabels);
@@ -46,9 +42,9 @@ function initRelatedPosts() {
         <h3 style="
           font-size: 1.2rem;
           font-weight: bold;
-          color: #fff;
+          color: #222;
           margin: 0 0 15px 0;
-          border-bottom: 1px solid rgba(255,255,255,0.2);
+          border-bottom: 1px solid rgba(0,0,0,0.1);
           padding-bottom: 6px;
           display: inline-block;
         ">📚 مطالب مرتبط</h3>
@@ -70,19 +66,20 @@ function initRelatedPosts() {
         const card = document.createElement('div');
         card.style.cssText = `
           flex: 1 1 calc(50% - 10px);
-          background: rgba(255,255,255,0.07);
+          background: #f8f9fa;
           border-radius: 10px;
           padding: 12px 15px;
           transition: all 0.3s ease;
           min-width: 220px;
+          border: 1px solid #e5e5e5;
         `;
-        card.onmouseover = () => card.style.background = "rgba(255,255,255,0.15)";
-        card.onmouseout = () => card.style.background = "rgba(255,255,255,0.07)";
+        card.onmouseover = () => card.style.background = "#f1f3f5";
+        card.onmouseout = () => card.style.background = "#f8f9fa";
 
         card.innerHTML = `
           <a href="${link}" style="text-decoration:none;color:inherit;display:block;">
-            <strong style="display:block;font-size:0.95rem;margin-bottom:6px;color:#fff;">${title}</strong>
-            <p style="font-size:13px;color:#bbb;margin:0;">${summary}</p>
+            <strong style="display:block;font-size:0.95rem;margin-bottom:6px;color:#222;">${title}</strong>
+            <p style="font-size:13px;color:#555;margin:0;">${summary}</p>
           </a>
         `;
         wrapper.appendChild(card);
@@ -94,7 +91,7 @@ function initRelatedPosts() {
   })();
 }
 
-// 🕒 اطمینان از اینکه DOM و #related-posts کاملاً لود شده
+// 🕒 اجرای ایمن پس از لود DOM
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     const check = setInterval(() => {
